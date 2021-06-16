@@ -29,6 +29,7 @@ services:
     networks:
       - monitor-net
     deploy:
+      replicas: 3
       placement:
         constraints:
           - node.role==manager
@@ -67,6 +68,7 @@ services:
       - '--config.file=/etc/alertmanager/config.yml'
       - '--storage.path=/alertmanager'
     deploy:
+      replicas: 3
       placement:
         constraints:
            - node.role==manager
@@ -104,6 +106,7 @@ services:
       - monitor-net
     user: "472"
     deploy:
+      replicas: 3
       placement:
         constraints:
           - node.role==manager
