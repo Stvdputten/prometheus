@@ -11,32 +11,64 @@ global:
 
 # Load and evaluate rules in this file every 'evaluation_interval' seconds.
 rule_files:
-  - 'alert.rules'
+  # - 'alert.rules'
   # - "first.rules"
   # - "second.rules"
 
 # alert
-alerting:
-  alertmanagers:
-  - scheme: http
-    static_configs:
-    - targets:
-      - "alertmanager:9093"
+# alerting:
+#   alertmanagers:
+#   - scheme: http
+#     static_configs:
+#     - targets:
+#       - "alertmanager:9093"
 
 # A scrape configuration containing exactly one endpoint to scrape:
 # Here it's Prometheus itself.
 scrape_configs:
   # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
-
   - job_name: 'prometheus'
 
     # Override the global default and scrape targets from this job every 5 seconds.
     scrape_interval: 5s
 
     static_configs:
-         - targets: ['145.100.58.162:9090','145.100.57.64:9090','145.100.57.65:9090']
+    - targets: ['localhost:9090']
+        #  - targets: ['145.100.58.162:9090','145.100.57.64:9090','145.100.57.65:9090']
         #  - targets: ['145.100.58.162:9090','145.100.57.64:9090','145.100.57.65:9090','145.100.57.66:9090','145.100.57.67:9090','145.100.57.68:9090','145.100.57.69:9090','145.100.57.74:9090']
 
+# Create a job for Docker daemons.
+  - job_name: 'docker'
+    dockerswarm_sd_configs:
+      - host: unix:///var/run/docker.sock
+        role: nodes
+    relabel_configs:
+      # Fetch metrics on port 9323.
+      - source_labels: [__meta_dockerswarm_node_address]
+        target_label: __address__
+        replacement: $1:9323
+
+      # Set hostname as instance label
+      - source_labels: [__meta_dockerswarm_node_hostname]
+        target_label: instance
+          # Create a job for Docker Swarm containers.
+
+  - job_name: 'dockerswarm'
+    dockerswarm_sd_configs:
+      - host: unix:///var/run/docker.sock
+        role: tasks
+    relabel_configs:
+      # Only keep containers that should be running.
+      - source_labels: [__meta_dockerswarm_task_desired_state]
+        regex: running
+        action: keep
+      # Only keep containers that have a `prometheus-job` label.
+      - source_labels: [__meta_dockerswarm_service_label_prometheus_job]
+        regex: .+
+        action: keep
+      # Use the prometheus-job Swarm label as Prometheus job label.
+      - source_labels: [__meta_dockerswarm_service_label_prometheus_job]
+        target_label: job
 
   - job_name: 'cadvisor'
 
@@ -44,14 +76,16 @@ scrape_configs:
     scrape_interval: 5s
 
     # dns_sd_configs:
-    # - names:
-    #   - 'tasks.cadvisor'
-    #   type: 'A'
-    #   port: 8080
+    dockerswarm_sd_configs:
+    - names:
+    - names:
+      - 'tasks.cadvisor'
+      type: 'A'
+      port: 8080
 
-    static_configs:
+    # static_configs:
         #  - targets: ['cadvisor:8080']
-         - targets: ['145.100.58.162:8080','145.100.57.64:8080','145.100.57.65:8080','145.100.57.66:8080','145.100.57.67:8080','145.100.57.68:8080','145.100.57.69:8080','145.100.57.74:8080']
+        #  - targets: ['145.100.58.162:8080','145.100.57.64:8080','145.100.57.65:8080','145.100.57.66:8080','145.100.57.67:8080','145.100.57.68:8080','145.100.57.69:8080','145.100.57.74:8080']
 
   - job_name: 'node-exporter'
 
@@ -59,14 +93,16 @@ scrape_configs:
     scrape_interval: 5s
 
     # dns_sd_configs:
-    # - names:
-    #   - 'tasks.node-exporter'
-    #   type: 'A'
-    #   port: 9100
+    dockerswarm_sd_configs:
+    - names:
+      - 'tasks.node-exporter'
+      type: 'A'
+      port: 9100
 
-    static_configs:
-        #  - targets: ['cadvisor:8080']
-         - targets: ['145.100.58.162:9100','145.100.57.64:9100','145.100.57.65:9100','145.100.57.66:9100','145.100.57.67:9100','145.100.57.68:9100','145.100.57.69:9100','145.100.57.74:9100']
+    # static_configs:
+    #     - targets: ['localhost:8080']
+        # - targets: ['cadvisor:8080']
+        #  - targets: ['145.100.58.162:9100','145.100.57.64:9100','145.100.57.65:9100','145.100.57.66:9100','145.100.57.67:9100','145.100.57.68:9100','145.100.57.69:9100','145.100.57.74:9100']
 
 #  - job_name: 'pushgateway'
 #    scrape_interval: 10s
