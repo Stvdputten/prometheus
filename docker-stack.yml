@@ -29,7 +29,8 @@ services:
     networks:
       - monitor-net
     deploy:
-      replicas: 3
+      # replicas: 3
+      mode: global
       placement:
         constraints:
           - node.role==manager
@@ -107,7 +108,7 @@ services:
     user: "472"
     deploy:
       # replicas: 3
-      replicas: global
+      mode: global
       placement:
         constraints:
           - node.role==manager
