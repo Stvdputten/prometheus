@@ -105,7 +105,7 @@ services:
       - ./grafana/config.monitoring
     networks:
       - monitor-net
-    user: "472"
+    # user: "472"
     deploy:
       # replicas: 3
       mode: global
