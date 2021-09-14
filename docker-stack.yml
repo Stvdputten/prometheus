@@ -93,7 +93,7 @@ services:
           condition: on-failure
 
   grafana:
-    image: grafana/grafana
+    image: grafana/grafana:6.5.0
     depends_on:
       - prometheus
     ports:
@@ -105,7 +105,7 @@ services:
       - ./grafana/config.monitoring
     networks:
       - monitor-net
-    # user: "472"
+    user: "472"
     deploy:
       # replicas: 3
       mode: global
