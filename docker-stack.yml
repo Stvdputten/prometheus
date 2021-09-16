@@ -10,6 +10,7 @@ networks:
 services:
 
   prometheus:
+    privileged: true
     image: prom/prometheus
     volumes:
       - ./prometheus/:/etc/prometheus/
@@ -38,6 +39,7 @@ services:
         condition: on-failure
 
   node-exporter:
+    privileged: true
     image: prom/node-exporter
     volumes:
       - /proc:/host/proc:ro
@@ -77,6 +79,7 @@ services:
   #       condition: on-failure    
 
   cadvisor:
+    privileged: true
     image: google/cadvisor
     volumes:
       - /:/rootfs:ro
@@ -93,13 +96,14 @@ services:
           condition: on-failure
 
   grafana:
+    privileged: true
     image: grafana/grafana:6.5.0
     depends_on:
       - prometheus
     ports:
       - 3000:3000
     volumes:
-      # - grafana_data:/var/lib/grafana
+      - grafana_data:/var/lib/grafana
       - ./grafana/provisioning/:/etc/grafana/provisioning/
     env_file:
       - ./grafana/config.monitoring
